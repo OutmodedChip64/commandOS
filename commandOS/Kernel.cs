@@ -31,26 +31,29 @@ namespace commandOS
 
         protected override void Run()
         {
-            if (current_directory[current_directory.Length - 1].ToString() == "\\" && current_directory[current_directory.Length - 2].ToString() == "\\")
+            if (current_directory[current_directory.Length - 1].ToString() != "\\")
             {
-                current_directory = current_directory.Remove(current_directory.Length - 1);
+                current_directory = current_directory + "\\";
             }
+            DestroySlashes();
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.Write("{" + current_directory + "} command>> ");
             Console.ForegroundColor = ConsoleColor.Cyan;
             var input = Console.ReadLine();
             Console.ForegroundColor = ConsoleColor.White;
-            if (input == "help") // HELP
+            if (input == "help") // HELP==========
             {
                 Console.WriteLine("commandOS v0.1 Command List \n");
                 Console.WriteLine("help : Returns a list of commands");
                 Console.WriteLine("clear : Clears the screen");
                 Console.WriteLine("list : Lists all items in current directory");
-                Console.WriteLine("goto [directory] : Goes to new directory (-back goes to previous directory)");
+                Console.WriteLine("goto [directory] : Goes to new directory (--back goes to previous directory)");
+                Console.WriteLine("mkdir [name] : Creates a new directory in current directory");
+                Console.WriteLine("deldir [directory] : Deletes a directory");
                 Console.WriteLine("shutdown : Shuts down commandOS");
                 Console.WriteLine("reboot : Reboots commandOS");
                 Console.WriteLine("\n");
-            } else if (input == "clear") { // CLEAR
+            } else if (input == "clear") { // CLEAR==========
                 Console.Clear();
             }
             else if (input == "list")
@@ -65,35 +68,25 @@ namespace commandOS
                 {
                     Console.WriteLine(item);
                 }
-            } else if (input.StartsWith("goto ")) // GOTO
+            } else if (input.StartsWith("goto ")) // GOTO==========
             {
-                /*
-                var fromStart = false;
-                var toBack = false;
+                if (input.Remove(0, 5) == null)
+                {
+                    Console.WriteLine("You cannot goto a null directory");
+                    Run();
+                }
                 if (input.StartsWith("goto 0:\\"))
                 {
-                    fromStart = true;
                     if (Directory.Exists(input.Remove(0, 5)))
                     {
                         current_directory = input.Remove(0, 5);
+                        Run();
                     } else
                     {
-                        Console.WriteLine("The path '" + input.Remove(0, 5) + "' is invalid");
+                        Console.WriteLine("No such directory as '" + input.Remove(0, 5) + "'");
                     }
-                    if (input[input.Length - 1].ToString() != "\\")
-                    {
-                        current_directory = current_directory + "\\";
-                    }
-                    if (!Directory.Exists(current_directory))
-                    {
-                        Console.WriteLine("FATAL ERROR: VALUE OF CURRENT_DIRECTORY DOES NOT EXIST!");
-                        current_directory = "0:\\";
-                    }
-                    Run();
-                }
-                
-                if (input == "goto -back" && current_directory != "0:\\" && !fromStart) {
-                    toBack = true;
+                } else if (input == "goto --back" && current_directory != "0:\\")
+                {
                     int lastSlash = current_directory.Length + 1;
                     bool number = false;
                     foreach (char n in current_directory)
@@ -102,68 +95,64 @@ namespace commandOS
                         if (current_directory[lastSlash - 1].ToString() == "\\" && !number)
                         {
                             number = true;
-                            Console.WriteLine("number false");
-                        } else if (current_directory[lastSlash - 1].ToString() == "\\" && number)
+                        }
+                        else if (current_directory[lastSlash - 1].ToString() == "\\" && number)
                         {
-                            Console.WriteLine("number true");
                             break;
                         }
                     }
                     if (lastSlash >= 0 && lastSlash <= current_directory.Length)
                     {
                         current_directory = current_directory.Substring(0, lastSlash);
-                        Console.WriteLine("done");
-                    } else
+                    }
+                    else
                     {
                         Console.WriteLine("ERROR: lastSlash is under 0!");
+                        current_directory = "0:\\";
                     }
                     if (!Directory.Exists(current_directory))
                     {
                         Console.WriteLine("FATAL ERROR: VALUE OF CURRENT_DIRECTORY DOES NOT EXIST!");
                         current_directory = "0:\\";
                     }
-                    Run();
-                }
-                
-                if (Directory.Exists(current_directory + input.Remove(0, 5)) && !fromStart && !toBack)
+                } else
                 {
-                    current_directory = current_directory + input.Remove(0, 5);
-                    if (input[input.Length - 1].ToString() != "\\")
+                    string[] dirs = GetDirFadr(current_directory);
+                    var timesDone = 0;
+                    bool inputIsInDirs = false;
+                    foreach (var item in dirs)
                     {
-                        current_directory = current_directory + "\\";
+                        timesDone++;
+                        if (item == input.Remove(0, 5))
+                        {
+                            inputIsInDirs = true;
+                            break;
+                        }
                     }
-                    if (!Directory.Exists(current_directory))
+                    if (inputIsInDirs)
                     {
-                        Console.WriteLine("FATAL ERROR: VALUE OF CURRENT_DIRECTORY DOES NOT EXIST!");
-                        current_directory = "0:\\";
+                        current_directory = current_directory + input.Remove(0, 5);
                     }
-                }
-                else if (!Directory.Exists(current_directory + input.Remove(0, 5)) && !fromStart && !toBack)
-                {
-                    Console.WriteLine("The path '" + current_directory + input.Remove(0, 5) + "' is invalid");
-                }
-                */
-                string[] dirs = GetDirFadr(current_directory);
-                var timesDone = 0;
-                bool inputIsInDirs = false;
-                foreach (var item in dirs)
-                {
-                    timesDone++;
-                    if (item == input.Remove(0, 5))
+                    else if (!inputIsInDirs)
                     {
-                        inputIsInDirs = true;
-                        break;
+                        if (Directory.Exists(current_directory + input.Remove(0, 5)))
+                        {
+                            current_directory = current_directory + input.Remove(0, 5);
+                        }
                     }
                 }
-                if (inputIsInDirs)
-                {
-
-                }
-            } else if (input == "shutdown") // SHUTDOWN
+            } else if (input.StartsWith("mkdir ")) {
+                fs.CreateDirectory(current_directory + input.Remove(0, 6));
+            }
+            else if (input.StartsWith("deldir "))
+            {
+                Console.WriteLine("Command under construction");
+            }
+            else if (input == "shutdown") // SHUTDOWN==========
             {
                 Console.WriteLine("Shutting down...");
                 Cosmos.System.Power.Shutdown();
-            } else if (input == "reboot") // REBOOT
+            } else if (input == "reboot") // REBOOT==========
             {
                 Console.WriteLine("Rebooting...");
                 Cosmos.System.Power.Reboot();
@@ -186,7 +175,7 @@ namespace commandOS
             return file;
         }
 
-        private void login()
+        private void login() // LOGIN-----------------------------------------------------------------
         {
             Console.Clear();
             bool ucorrect = false;
@@ -223,7 +212,7 @@ namespace commandOS
             }
         }
 
-        private void install()
+        private void install() // INSTALL-----------------------------------------------------------------
         {
             Console.Clear();
             Console.ForegroundColor = ConsoleColor.Red;
@@ -249,6 +238,80 @@ namespace commandOS
             Console.Write("Press any key to reboot...");
             Console.ReadKey();
             Cosmos.System.Power.Reboot();
+        }
+
+        private void DestroySlashes() // DESTROY SLASHES-----------------------------------------------------------------
+        {
+            bool slash = false;
+            bool shouldRemove = false;
+            int i = -1;
+            int index = 0;
+            int howMany = 0;
+            int times = 1;
+            int subtractAm = -1;
+            List<int> indexes = new List<int>();
+            List<int> howManys = new List<int>();
+            foreach (char n in current_directory)
+            {
+                i++;
+                if (n.ToString() == "\\")
+                {
+                    if (!slash)
+                    {
+                        index = i;
+                    }
+                    slash = true;
+                    howMany++;
+                }
+                else
+                {
+                    if (slash && howMany > 1)
+                    {
+                        shouldRemove = true;
+                        slash = false;
+                    }
+                    else
+                    {
+                        howMany = 0;
+                        slash = false;
+                    }
+                }
+                if (i + 1 == current_directory.Length)
+                {
+                    if (slash && howMany > 1)
+                    {
+                        shouldRemove = true;
+                        slash = false;
+                    }
+                }
+                if (shouldRemove)
+                {
+                    indexes.Add(index);
+                    howManys.Add(howMany - 1);
+                    subtractAm++;
+                    if (subtractAm > 0)
+                    {
+                        for (int sa = 0; sa < subtractAm; sa++)
+                        {
+                            indexes[times - 1] = indexes[times - 1] - howManys[sa];
+                        }
+                    }
+                    howMany = 0;
+                    shouldRemove = false;
+                    times++;
+                }
+            }
+            if (indexes.Count >= 1)
+            {
+                int li = 0;
+                foreach (int item in indexes)
+                {
+                    Console.WriteLine("li: " + li);
+                    current_directory = current_directory.Remove(indexes[li], howManys[li]);
+                    Console.WriteLine(current_directory);
+                    li++;
+                }
+            }
         }
     }
 }
