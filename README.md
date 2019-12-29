@@ -3,7 +3,7 @@ commandOS
 
 Welcome to the simple command line OS made by Everett Flynn (OutmodedChip64).
 
-Including username and password creation for protection and a file system that you can navigate. More to come soon!
+Including username and password creation for protection and a file system that you can navigate.
 
 
 Commands
